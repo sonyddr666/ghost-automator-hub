@@ -1,42 +1,19 @@
 # Ghost Automator Hub - Pro Plus Max
 
-> Hub de comando centralizado para automacoes headless com Playwright.  
-> Interface multi-tab Dark Mode + API REST + Webhook Telegram + Swarm Mode.
->
-> **Isso nao e apenas um script. E um colapso estetico de produtividade.**
+> Hub de automacao headless com Playwright + CustomTkinter.  
+> **Modo PC por padrao. Modulos externos so ligam quando voce quiser.**
 
 ---
 
-## Arquitetura
+## Modos de operacao
 
-```
-[Ghost1 CMD Portal / Telegram / qualquer front-end]
-              |
-              v  POST /gerar {"prompt": "..."}
-     api_server.py (FastAPI localhost:8000)
-              |
-              v  dispara headless
-     Playwright + Chrome User Data
-              |
-              v  PNG gerado
-     geracoes_flow/imagem.png
-              |
-              v  notifica
-     notificador_telegram.py  -->  teu celular
-```
+| Modo | Quem usa | Como ligar |
+|---|---|---|
+| **Modo PC** | Padrao, sempre ativo | Nada a fazer |
+| **Modo Avancado** | Telegram + API REST | `ATIVAR_MODO_AVANCADO=true` no `.env` |
 
----
-
-## Modulos
-
-| Arquivo | Funcao |
-|---|---|
-| `automator_hub.py` | Hub GUI multi-tab (CustomTkinter) |
-| `api_server.py` | API REST FastAPI (localhost:8000) |
-| `notificador_telegram.py` | Webhook: envia PNG pro Telegram |
-| `automacoes/flow_hub.py` | Script Flow modo unico |
-| `automacoes/flow_batch.py` | Script Flow modo batch (fila) |
-| `automacoes/flow_swarm.py` | Script Flow modo enxame (paralelo) |
+No Modo PC o sistema e 100% local: so tu, o Chrome e o Playwright.
+No Modo Avancado os modulos externos acordam conforme as flags no `.env`.
 
 ---
 
@@ -58,70 +35,68 @@ playwright install chromium
 cp .env.example .env
 ```
 
-Edita o `.env`:
+Edita so a linha obrigatoria:
 ```env
 CHROME_USER_DATA=C:\Users\SEU_USUARIO\AppData\Local\Google\Chrome\User Data
-TELEGRAM_BOT_TOKEN=SEU_TOKEN_AQUI
-TELEGRAM_CHAT_ID=SEU_CHAT_ID_AQUI
 ```
+
+Substitui `SEU_USUARIO` pelo teu nome de usuario do Windows. Pronto.
 
 ---
 
-## Como usar
+## Rodar o Hub (Modo PC)
 
-### Modo Hub (GUI)
 ```bash
 python automator_hub.py
 ```
 
-### Modo API (servidor local)
+A sidebar mostra o badge **MODO PC** em ciano.  
+Telegram e API aparecem como `off` na sidebar.
+
+---
+
+## Scripts disponiveis
+
+### Geracao unica (via Hub ou terminal)
 ```bash
-python api_server.py
-# Docs: http://localhost:8000/docs
+python automacoes/flow_hub.py "Um samurai ciborgue em neon Tokyo, 4k"
 ```
 
-Exemplo de chamada:
-```bash
-curl -X POST http://localhost:8000/gerar \
-  -H "Content-Type: application/json" \
-  -d "{\"prompt\": \"Um samurai ciborgue em neon Tokyo, 4k\"}"
-```
-
-Resposta:
-```json
-{
-  "id": "a3f9c1b2",
-  "status": "na_fila",
-  "mensagem": "Poltergeist invocado. Geracao iniciada em background.",
-  "prompt": "Um samurai ciborgue em neon Tokyo, 4k",
-  "criado_em": "2026-04-05T02:00:00"
-}
-```
-
-Checar status:
-```bash
-curl http://localhost:8000/status/a3f9c1b2
-```
-
-### Modo Batch
+### Batch (fila de prompts)
 ```bash
 python automacoes/flow_batch.py prompts.txt
 ```
 
-### Modo Swarm (N imagens em paralelo)
+### Swarm (N imagens em paralelo)
 ```bash
 python automacoes/flow_swarm.py prompts.txt --workers 3
 ```
 
 ---
 
-## Configurar Bot Telegram
+## Ativar Modo Avancado
 
-1. Abre o Telegram e fala com `@BotFather`
-2. Manda `/newbot`, segue as instrucoes, copia o token
-3. Fala com `@userinfobot` pra pegar teu `chat_id`
-4. Cola os dois no `.env`
-5. Quando uma imagem for gerada, ela chega direto no teu celular
+Edita o `.env`:
+```env
+ATIVAR_MODO_AVANCADO=true
+ATIVAR_TELEGRAM=true
+ATIVAR_API=true
+
+TELEGRAM_BOT_TOKEN=token_do_botfather
+TELEGRAM_CHAT_ID=teu_chat_id
+```
+
+O que muda no Hub:
+- Badge da sidebar vira laranja **MODO AVANCADO ON**
+- Nova aba **Modo Avancado** aparece com status dos modulos
+- Botao **Iniciar API Server** aparece na sidebar
+- Telegram e API aparecem como `ON` nos indicadores
+
+Para subir a API manualmente:
+```bash
+python api_server.py
+# Docs: http://localhost:8000/docs
+```
 
 ---
 
@@ -129,18 +104,19 @@ python automacoes/flow_swarm.py prompts.txt --workers 3
 
 ```
 ghost-automator-hub/
-|-- automator_hub.py         # Hub GUI multi-tab
-|-- api_server.py            # API REST (FastAPI)
-|-- notificador_telegram.py  # Webhook Telegram
-|-- requirements.txt         # Dependencias
-|-- .env.example             # Template de configuracao
-|-- .gitignore               # Manto da invisibilidade
-|-- prompts.txt              # Prompts de exemplo
+|-- automator_hub.py         # Hub GUI (ponto de entrada principal)
+|-- config.py                # Central de configuracao (le o .env)
+|-- api_server.py            # API REST FastAPI (so usar se MODO_API=true)
+|-- notificador_telegram.py  # Webhook Telegram (so usar se MODO_TELEGRAM=true)
+|-- requirements.txt
+|-- .env.example             # Template - copia para .env
+|-- .gitignore
+|-- prompts.txt
 |-- automacoes/
-|   |-- flow_hub.py          # Flow modo unico
-|   |-- flow_batch.py        # Flow modo batch
-|   `-- flow_swarm.py        # Flow modo enxame (paralelo)
-`-- perfis/                  # Chrome sessions (NUNCA sobe pro GitHub)
+|   |-- flow_hub.py          # Flow: geracao unica
+|   |-- flow_batch.py        # Flow: fila de prompts
+|   `-- flow_swarm.py        # Flow: paralelo com workers
+`-- perfis/                  # Chrome sessions (nunca sobe pro GitHub)
 ```
 
 ---
@@ -148,12 +124,12 @@ ghost-automator-hub/
 ## Seguranca
 
 O `.gitignore` blinda:
-- `perfis/` - Chrome User Data (cookies, login Google)
+- `perfis/` - Chrome User Data
 - `.env` - tokens e senhas
-- `geracoes_flow/` - imagens geradas localmente
-- `__pycache__/` e arquivos `.pyc`
+- `geracoes_flow/` - imagens geradas
+- `__pycache__/` e `.pyc`
 
 ---
 
-*Feito com Playwright + CustomTkinter + FastAPI. Zero mouse sequestrado. Zero janela pulando na tela.*  
-*Criado para farmar aura 24/7.*
+*Feito com Playwright + CustomTkinter + FastAPI.*  
+*Zero mouse sequestrado. Zero janela pulando na tela. Criado para farmar aura 24/7.*
