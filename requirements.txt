@@ -1,2 +1,6 @@
-customtkinter>=5.2
-playwright>=1.44
+# Pergaminho de Invocacao - Ghost Automator Hub
+# Instala tudo com: pip install -r requirements.txt
+# Depois roda: playwright install chromium
+
+playwright==1.42.0
+customtkinter==5.2.2
