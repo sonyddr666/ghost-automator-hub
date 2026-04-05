@@ -1,0 +1,31 @@
+# Alma do usuario: NUNCA sobe pro GitHub
+perfis/
+geracoes_flow/
+output_aura/
+User Data/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Variaveis de ambiente
+.env
+.env.*
+
+# Erros e logs do Playwright
+erro_poltergeist.png
+*.log
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
